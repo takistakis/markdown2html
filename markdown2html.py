@@ -49,9 +49,9 @@ TEMPLATE = """\
       .markdown-body {
         border: 1px solid #ddd;
         border-radius: 3px;
-        max-width: 980px;
-        margin: 64px auto 48px;
-        padding: 45px 45px 29px;
+        max-width: 888px;
+        margin: 64px auto 51px;
+        padding: 45px;
       }
     </style>
   </head>
