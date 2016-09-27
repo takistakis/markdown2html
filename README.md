@@ -38,9 +38,13 @@ Options:
   -h, --help        Show this help message and exit
 ```
 
+## TODO
+
+* Instant reloading in the browser whenever the HTML file is regenerated.
+
 ## License
 
-Licensed under GPLv3.
+Licensed under GPLv3 or later.
 
 [grip]: https://github.com/joeyespo/grip
 [github-markdown.css]: https://github.com/sindresorhus/github-markdown-css
