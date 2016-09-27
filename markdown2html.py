@@ -31,7 +31,7 @@ Options:
 """
 
 import logging
-import os
+import os.path
 import sys
 import urllib.request
 import webbrowser
@@ -110,7 +110,7 @@ def run(mdpath, out=None, force=False, preview=False):
         sys.exit(1)
     mdfilename = os.path.basename(mdpath)
     htmlpath = out or '/tmp/%s.html' % os.path.splitext(mdfilename)[0]
-    csspath = '%s/.cache/github-markdown.css' % os.environ['HOME']
+    csspath = os.path.expanduser('~/.cache/github-markdown.css')
 
     if force or not os.path.isfile(csspath):
         logging.info("Downloading github-markdown.css...")
