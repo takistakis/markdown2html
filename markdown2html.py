@@ -23,11 +23,12 @@ markdown, pygments and the latest github-markdown.css from
 https://github.com/sindresorhus/github-markdown-css
 
 Options:
-  -o, --out <file>  Write output to <file>
-  -f, --force       Overwrite existing CSS file
-  -p, --preview     Open generated HTML file in browser
-  -q, --quiet       Show less information
-  -h, --help        Show this help message and exit
+  -o, --out <file>      Write output to <file>
+  -f, --force           Overwrite existing CSS file
+  -p, --preview         Open generated HTML file in browser
+  -i, --interval <int>  Refresh page every <int> seconds
+  -q, --quiet           Show less information
+  -h, --help            Show this help message and exit
 """
 
 import logging
@@ -43,6 +44,7 @@ TEMPLATE = """\
 <html>
   <head>
     <meta charset="utf-8">
+    %s
     <title>%s</title>
     <link rel="stylesheet" href="%s">
     <style>
@@ -75,7 +77,7 @@ def download_css(path):
         logging.warning("Unable to download CSS file")
 
 
-def render(text, title, csspath):
+def render(text, title, csspath, interval):
     """Convert a Markdown string to an HTML page.
 
     The following Markdown extensions are used to support most GFM features:
@@ -99,11 +101,13 @@ def render(text, title, csspath):
     )
     # Don't use the line-height style from pygments
     body = body.replace(' style="line-height: 125%"', '')
-    html = TEMPLATE % (title, csspath, body)
+    refresh = '<meta http-equiv="refresh" content="%s">' % interval
+    refresh = refresh if interval is not None else ''
+    html = TEMPLATE % (refresh, title, csspath, body)
     return html
 
 
-def run(mdpath, out=None, force=False, preview=False):
+def run(mdpath, out=None, force=False, preview=False, interval=None):
     """Generate an HTML file from a Markdown one."""
     if not os.path.isfile(mdpath):
         logging.error("No such file: %s", mdpath)
@@ -119,7 +123,7 @@ def run(mdpath, out=None, force=False, preview=False):
     logging.info("Converting %s to HTML...", mdfilename)
     with open(mdpath) as f:
         text = f.read()
-    html = render(text, title=mdfilename, csspath=csspath)
+    html = render(text, title=mdfilename, csspath=csspath, interval=interval)
     with open(htmlpath, 'w') as f:
         f.write(html)
 
@@ -144,7 +148,8 @@ def main():
         args['<file>'],
         args['--out'],
         args['--force'],
-        args['--preview']
+        args['--preview'],
+        args['--interval'],
     )
 
 

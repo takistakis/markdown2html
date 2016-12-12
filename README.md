@@ -31,16 +31,13 @@ $ pip install markdown pygments docopt
 markdown2html.py [options] <file>
 
 Options:
-  -o, --out <file>  Write output to <file>
-  -f, --force       Overwrite existing CSS file
-  -p, --preview     Open generated HTML file in browser
-  -q, --quiet       Show less information
-  -h, --help        Show this help message and exit
+  -o, --out <file>      Write output to <file>
+  -f, --force           Overwrite existing CSS file
+  -p, --preview         Open generated HTML file in browser
+  -i, --interval <int>  Refresh page every <int> seconds
+  -q, --quiet           Show less information
+  -h, --help            Show this help message and exit
 ```
-
-## TODO
-
-* Instant reloading in the browser whenever the HTML file is regenerated.
 
 ## License
 
