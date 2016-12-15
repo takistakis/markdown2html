@@ -28,7 +28,7 @@ $ pip install markdown pygments docopt
 ## Usage
 
 ```
-markdown2html.py [options] <file>
+markdown2html [options] <file>
 
 Options:
   -o, --out <file>      Write output to <file>

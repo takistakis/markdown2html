@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Usage: markdown2html.py [options] <file>
+Usage: markdown2html [options] <file>
 
 Convert a GitHub Flavored Markdown file to HTML, using
 markdown, pygments and the latest github-markdown.css from
