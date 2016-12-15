@@ -25,6 +25,9 @@ Install with:
 $ pip install markdown pygments docopt
 ```
 
+Optionally, if [pymdown_extensions] is present, the [github extension bundle]
+is also used.
+
 ## Usage
 
 ```
@@ -48,3 +51,5 @@ Licensed under GPLv3 or later.
 [markdown]: https://pythonhosted.org/Markdown
 [pygments]: http://pygments.org
 [docopt]: http://docopt.org
+[pymdown_extensions]: https://github.com/facelessuser/pymdown-extensions
+[github extension bundle]: https://facelessuser.github.io/pymdown-extensions/extensions/github

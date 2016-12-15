@@ -83,22 +83,31 @@ def render(text, title, csspath, interval):
     The following Markdown extensions are used to support most GFM features:
     codehilite, fenced_code, sane_lists, tables.
     """
-    body = markdown.markdown(
-        text,
-        extensions=[
-            'markdown.extensions.codehilite',
-            'markdown.extensions.fenced_code',
-            'markdown.extensions.sane_lists',
-            'markdown.extensions.tables',
-        ],
-        extension_configs={
-            'markdown.extensions.codehilite': {
-                'guess_lang': False,
-                'noclasses': True,
-                'pygments_style': 'tango',
-            }
-        }
-    )
+    extensions = [
+        'markdown.extensions.codehilite',
+        'markdown.extensions.fenced_code',
+        'markdown.extensions.sane_lists',
+        'markdown.extensions.tables',
+    ]
+
+    configs = {
+        'markdown.extensions.codehilite': {
+            'guess_lang': False,
+            'noclasses': True,
+            'pygments_style': 'tango',
+        },
+    }
+
+    try:
+        import pymdownx
+    except ImportError:
+        logging.info("Module pymdownx not found")
+    else:
+        extensions.append('pymdownx.github' )
+        configs['pymdownx.github'] = {'no_nl2br': True}
+
+    body = markdown.markdown(text, extensions=extensions,
+                             extension_configs=configs)
     # Don't use the line-height style from pygments
     body = body.replace(' style="line-height: 125%"', '')
     refresh = '<meta http-equiv="refresh" content="%s">' % interval
