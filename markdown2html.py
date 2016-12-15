@@ -103,7 +103,8 @@ def render(text, title, csspath, interval):
     except ImportError:
         logging.info("Module pymdownx not found")
     else:
-        extensions.append('pymdownx.github' )
+        extensions.remove('markdown.extensions.fenced_code')
+        extensions.append('pymdownx.github')
         configs['pymdownx.github'] = {'no_nl2br': True}
 
     body = markdown.markdown(text, extensions=extensions,
