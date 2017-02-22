@@ -105,7 +105,6 @@ def render(text, title, csspath, interval):
     else:
         extensions.remove('markdown.extensions.fenced_code')
         extensions.append('pymdownx.github')
-        configs['pymdownx.github'] = {'no_nl2br': True}
 
     body = markdown.markdown(text, extensions=extensions,
                              extension_configs=configs)
