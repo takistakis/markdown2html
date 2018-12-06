@@ -25,8 +25,8 @@ Install with:
 $ pip install markdown pygments docopt
 ```
 
-Optionally, if [pymdown_extensions] is present, the [github extension bundle]
-is also used.
+Optionally, if [pymdown_extensions] is present, extensions [extra],
+[magiclink] and [tasklist] are used.
 
 ## Usage
 
@@ -52,4 +52,6 @@ Licensed under GPLv3 or later.
 [pygments]: http://pygments.org
 [docopt]: http://docopt.org
 [pymdown_extensions]: https://github.com/facelessuser/pymdown-extensions
-[github extension bundle]: https://facelessuser.github.io/pymdown-extensions/extensions/github
+[extra]: https://facelessuser.github.io/pymdown-extensions/extensions/extra
+[magiclink]: https://facelessuser.github.io/pymdown-extensions/extensions/magiclink
+[tasklist]: https://facelessuser.github.io/pymdown-extensions/extensions/tasklist

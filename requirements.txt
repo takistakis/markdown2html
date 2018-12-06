@@ -1,4 +1,4 @@
 docopt==0.6.2
-Markdown==2.6.8
-Pygments==2.2.0
-pymdown-extensions==2.0
+Markdown==3.0.1
+Pygments==2.3.0
+pymdown-extensions==6.0

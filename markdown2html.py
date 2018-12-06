@@ -104,7 +104,9 @@ def render(text, title, csspath, interval):
         logging.info("Module pymdownx not found")
     else:
         extensions.remove('markdown.extensions.fenced_code')
-        extensions.append('pymdownx.github')
+        extensions.append('pymdownx.extra')
+        extensions.append('pymdownx.magiclink')
+        extensions.append('pymdownx.tasklist')
 
     body = markdown.markdown(text, extensions=extensions,
                              extension_configs=configs)
