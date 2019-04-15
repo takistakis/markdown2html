@@ -6,11 +6,11 @@ from setuptools import setup
 
 setup(
     name='markdown2html',
-    version='0.2.0',
+    version='0.3.0',
     description='Convert a GitHub Flavored Markdown file to HTML.',
-    author='Panagiotis Ktistakis',
-    author_email='panktist@gmail.com',
-    url='https://github.com/forkbong/markdown2html',
+    author='Thomas Cannon',
+    author_email='tcannon.mail@gmail.com',
+    url='https://github.com/twcannon/markdown2html',
     license='GPLv3',
     py_modules=['markdown2html'],
     entry_points={'console_scripts': ['markdown2html=markdown2html:main']},

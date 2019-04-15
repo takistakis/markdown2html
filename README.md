@@ -1,10 +1,10 @@
 # markdown2html
 
-Yet another script that converts GitHub Flavored Markdown files to HTML.
+Script that converts GitHub Flavored Markdown files/directories to HTML.
 
-It is inspired by [grip], and is an attempt to replicate it without its
-dependencies and without the need to interact directly with GitHub, or even
-being connected to the internet.  The first time it runs, [github-markdown.css]
+Originally forked from [https://github.com/forkbong/markdown2html]
+
+The first time it runs, [github-markdown.css]
 is downloaded and stored in `~/.cache` and from then on, it can be used while
 being offline.  Generated HTML is put at `/tmp` by default.
 

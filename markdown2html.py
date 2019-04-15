@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# Copyright 2016 Panagiotis Ktistakis <panktist@gmail.com>
+# Forked from: Panagiotis Ktistakis <panktist@gmail.com>
+# This version maintainer: Thomas Cannon <tcannon.mail@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,16 +24,18 @@ markdown, pygments and the latest github-markdown.css from
 https://github.com/sindresorhus/github-markdown-css
 
 Options:
-  -o, --out <file>      Write output to <file>
-  -f, --force           Overwrite existing CSS file
-  -p, --preview         Open generated HTML file in browser
-  -i, --interval <int>  Refresh page every <int> seconds
-  -q, --quiet           Show less information
-  -h, --help            Show this help message and exit
+  --file <file>     Use file <file>
+  --file_dir <path> Use directory instead of file <path>
+  --out <file>      Write output to <file>
+  --force           Overwrite existing CSS file
+  --preview         Open generated HTML file in browser
+  --interval <int>  Refresh page every <int> seconds
+  --quiet           Show less information
+  --help            Show this help message and exit
 """
 
 import logging
-import os.path
+import os
 import sys
 import urllib.request
 import webbrowser
@@ -118,30 +121,49 @@ def render(text, title, csspath, interval):
     return html
 
 
-def run(mdpath, out=None, force=False, preview=False, interval=None):
+def run(file=None, file_dir=None, out=None, force=False, preview=False, interval=None):
     """Generate an HTML file from a Markdown one."""
-    if not os.path.isfile(mdpath):
-        logging.error("No such file: %s", mdpath)
+    mdfiles = []
+    outfile = []
+    # top directory takes prescedence over a single file.
+    if file_dir is not None:
+        if not os.path.isfile(file_dir):
+            logging.error("No such top directory: %s", file_dir)
+            sys.exit(1)
+        mdfiles = [os.path.join(root, name)
+            for root, dirs, files in os.walk(path)
+            for name in files
+            if name.endswith((".md"))]
+        outfile=os.path.dirname(file_dir)
+    elif file is not None:
+        if not os.path.isfile(file):
+            logging.error("No such file: %s", file)
+            sys.exit(1)
+        mdfiles = [file]
+        outfile = out
+    else:
+        logging.error("Must choose a file or directory path")
         sys.exit(1)
-    mdfilename = os.path.basename(mdpath)
-    htmlpath = out or '/tmp/%s.html' % os.path.splitext(mdfilename)[0]
-    csspath = os.path.expanduser('~/.cache/github-markdown.css')
 
     if force or not os.path.isfile(csspath):
         logging.info("Downloading github-markdown.css...")
         download_css(csspath)
 
-    logging.info("Converting %s to HTML...", mdfilename)
-    with open(mdpath) as f:
-        text = f.read()
-    html = render(text, title=mdfilename, csspath=csspath, interval=interval)
-    with open(htmlpath, 'w') as f:
-        f.write(html)
+    csspath = os.path.expanduser('~/.cache/github-markdown.css')
+    for curfile in mdfiles:
+        curfilename = os.path.basename(curpath)
+        htmlpath = outfile or '/tmp/%s.html' % os.path.splitext(curfilename)[0]
+        logging.info("Converting %s to HTML...", curfilename)
+        with open(curfile) as f:
+            text = f.read()
+        html = render(text, title=curfilename, csspath=csspath, interval=interval)
+        with open(htmlpath, 'w') as f:
+            f.write(html)
 
-    if preview:
-        browser = webbrowser.get().name
-        logging.info("Opening %s in %s...", htmlpath, browser)
-        webbrowser.open(htmlpath)
+        if preview:
+            browser = webbrowser.get().name
+            logging.info("Opening %s in %s...", htmlpath, browser)
+            webbrowser.open(htmlpath)
 
 
 def main():
@@ -149,6 +171,7 @@ def main():
     from docopt import docopt
     args = docopt(__doc__)
 
+    print('MADE IT HERE')
     logging.basicConfig(format='%(message)s')
     if args['--quiet']:
         logging.root.setLevel(logging.WARNING)
@@ -156,7 +179,8 @@ def main():
         logging.root.setLevel(logging.INFO)
 
     run(
-        args['<file>'],
+        args['--file'],
+        args['--file_dir'],
         args['--out'],
         args['--force'],
         args['--preview'],
