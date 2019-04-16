@@ -153,10 +153,11 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
     for curfile in mdfiles:
         curfilename = os.path.basename(curfile)
         htmlpath = curfile.replace('md','html').replace(file_dir,out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]
-        try:
-            os.makedirs(os.path.dirname(htmlpath))
-        except OSError as exc:
-            logging.error("Error creating file path for %s", htmlpath)
+        if not os.path.exists(htmlpath):
+            try:
+                os.makedirs(os.path.dirname(htmlpath))
+            except OSError as exc:
+                logging.error("Error creating file path for %s", htmlpath)
         logging.info("Converting %s to HTML...", curfilename)
         with open(curfile) as f:
             text = f.read()
