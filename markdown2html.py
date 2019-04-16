@@ -30,6 +30,7 @@ Options:
   --force           Overwrite existing CSS file
   --preview         Open generated HTML file in browser
   --interval <int>  Refresh page every <int> seconds
+  --nav             Create navigation at beginning of html file
   --quiet           Show less information
   --help            Show this help message and exit
 """
@@ -121,11 +122,12 @@ def render(text, title, csspath, interval):
     return html
 
 
-def run(file=None, file_dir=None, out=None, force=False, preview=False, interval=None):
+def run(file=None, file_dir=None, out=None, force=False, preview=False, interval=None, nav=False):
     """Generate an HTML file from a Markdown one."""
     mdfiles = []
     outfile = []
-    # top directory takes prescedence over a single file.
+    
+    # Find appropriate files
     if file_dir is not None:
         if not os.path.exists(file_dir):
             logging.error("No such top directory: %s", file_dir)
@@ -145,14 +147,30 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
         logging.error("Must choose a file or directory path")
         sys.exit(1)
 
+    # CSS
     csspath = os.path.expanduser('~/.cache/github-markdown.css')
     if force or not os.path.isfile(csspath):
         logging.info("Downloading github-markdown.css...")
         download_css(csspath)
 
+    # Navigation
+    navigation = []
+    if nav:
+        navigation = '### Project Links\n'
+        for curfile in mdfiles:
+            curfilename  = os.path.basename(curfile)
+            curpathnames = os.path.dirname(curfile).split('\\')
+            dir_level    = len(os.path.dirname(file_dir).split('\\')) if file_dir is not None else len(os.path.dirname(file).split('\\'))
+            navigation   += str('    '*(len(curpathnames)-dir_level)) \
+                        + '* ['+str(curpathnames[-1])+']' \
+                        + '(file:\\\\\\' \
+                        + str(curfile.replace('md','html').replace((file_dir if file_dir is not None else file), out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]) \
+                        +')\n'
+        print(navigation)
+    # Loop through files and rander to HTML
     for curfile in mdfiles:
         curfilename = os.path.basename(curfile)
-        htmlpath = curfile.replace('md','html').replace(file_dir,out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]
+        htmlpath = curfile.replace('md','html').replace((file_dir if file_dir is not None else file), out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]
         if not os.path.exists(htmlpath):
             try:
                 os.makedirs(os.path.dirname(htmlpath))
@@ -160,11 +178,13 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
                 logging.error("Error creating file path for %s", htmlpath)
         logging.info("Converting %s to HTML...", curfilename)
         with open(curfile) as f:
-            text = f.read()
+            text = str(f.read())
+            text = text.replace("### Project Links", str(navigation))
         html = render(text, title=curfilename, csspath=csspath, interval=interval)
         with open(htmlpath, 'w') as f:
             f.write(html)
 
+        # Preview
         if preview:
             browser = webbrowser.get().name
             logging.info("Opening %s in %s...", htmlpath, browser)
@@ -189,6 +209,7 @@ def main():
         args['--force'],
         args['--preview'],
         args['--interval'],
+        args['--nav'],
     )
 
 
