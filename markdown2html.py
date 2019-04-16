@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Usage: markdown2html [options] <file>
+Usage: markdown2html [options]
 
 Convert a GitHub Flavored Markdown file to HTML, using
 markdown, pygments and the latest github-markdown.css from
@@ -127,11 +127,11 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
     outfile = []
     # top directory takes prescedence over a single file.
     if file_dir is not None:
-        if not os.path.isfile(file_dir):
+        if not os.path.exists(file_dir):
             logging.error("No such top directory: %s", file_dir)
             sys.exit(1)
         mdfiles = [os.path.join(root, name)
-            for root, dirs, files in os.walk(path)
+            for root, dirs, files in os.walk(file_dir)
             for name in files
             if name.endswith((".md"))]
         outfile=os.path.dirname(file_dir)
@@ -145,14 +145,18 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
         logging.error("Must choose a file or directory path")
         sys.exit(1)
 
+    csspath = os.path.expanduser('~/.cache/github-markdown.css')
     if force or not os.path.isfile(csspath):
         logging.info("Downloading github-markdown.css...")
         download_css(csspath)
 
-    csspath = os.path.expanduser('~/.cache/github-markdown.css')
     for curfile in mdfiles:
-        curfilename = os.path.basename(curpath)
-        htmlpath = outfile or '/tmp/%s.html' % os.path.splitext(curfilename)[0]
+        curfilename = os.path.basename(curfile)
+        htmlpath = curfile.replace('md','html').replace(file_dir,out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]
+        try:
+            os.makedirs(os.path.dirname(htmlpath))
+        except OSError as exc:
+            logging.error("Error creating file path for %s", htmlpath)
         logging.info("Converting %s to HTML...", curfilename)
         with open(curfile) as f:
             text = f.read()
@@ -171,7 +175,6 @@ def main():
     from docopt import docopt
     args = docopt(__doc__)
 
-    print('MADE IT HERE')
     logging.basicConfig(format='%(message)s')
     if args['--quiet']:
         logging.root.setLevel(logging.WARNING)

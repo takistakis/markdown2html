@@ -22,7 +22,7 @@ which comes built-in with pygments.
 Install with:
 
 ```bash
-$ pip install markdown pygments docopt
+$ pip install markdown pygments docopt pymdown-extensions
 ```
 
 Optionally, if [pymdown_extensions] is present, extensions [extra],
