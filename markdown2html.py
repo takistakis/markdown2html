@@ -37,6 +37,7 @@ Options:
 
 import logging
 import os
+import re
 import sys
 import urllib.request
 import webbrowser
@@ -166,7 +167,7 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
                         + '(file:\\\\\\' \
                         + str(curfile.replace('md','html').replace((file_dir if file_dir is not None else file), out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]) \
                         +')\n'
-        print(navigation)
+        logging.info(navigation)
     # Loop through files and rander to HTML
     for curfile in mdfiles:
         curfilename = os.path.basename(curfile)
@@ -177,10 +178,13 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
             except OSError as exc:
                 logging.error("Error creating file path for %s", htmlpath)
         logging.info("Converting %s to HTML...", curfilename)
+        title = []
         with open(curfile) as f:
-            text = str(f.read())
-            text = text.replace("### Project Links", str(navigation))
-        html = render(text, title=curfilename, csspath=csspath, interval=interval)
+            text  = str(f.read())
+            title = re.match(r"^\#\s(.*)", text).group(1)
+            print(title)
+            text  = text.replace("### Project Links", str(navigation))
+        html = render(text, title=(title if title is not None else curfilename), csspath=csspath, interval=interval)
         with open(htmlpath, 'w') as f:
             f.write(html)
 
