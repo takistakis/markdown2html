@@ -159,16 +159,30 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
     if nav:
         navigation = '### Project Links\n'
         for curfile in mdfiles:
+            if os.name == 'nt':
+                logging.debug('OS is Windows - using \\')
+                link_prefix = '(file:\\\\'
+                # curfile = curfile.replace('\\','/')
+                curpathname = os.path.dirname(curfile).split('\\')
+            else:
+                logging.debug('OS is NOT Windows - using /')
+                link_prefix = '(file://'
+                # curfile = curfile.replace('/','\\')
+                curpathname = os.path.dirname(curfile).split('/')
+            if str(curpathname[-1]) == file_dir:
+                logging.info('curpathname[-1] == file_dir')
+                curpathname = [os.path.dirname(curfile).split('/')[-1]]
+            print('---------------')
+            logging.info(curfile)
             curfilename  = os.path.basename(curfile)
-            curpathnames = os.path.dirname(curfile).split('\\')
+            logging.info(str(curpathname))
+            logging.info(str(curpathname[-1]))
+            print('---------------')
             dir_level    = len(os.path.dirname(file_dir).split('\\')) if file_dir is not None else len(os.path.dirname(file).split('\\'))
-            navigation   += str('    '*(len(curpathnames)-dir_level)) \
-                        + '* ['+str(curpathnames[-1])+']' \
-                        + '(file:\\\\\\' \
-                        + str(curfile.replace('md','html').replace((file_dir if file_dir is not None else file), out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]) \
-                        +')\n'
+            link_path    = str(curfile.replace('md','html').replace((file_dir if file_dir is not None else file), out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]).replace('\\','/')
+            navigation   += str('    '*(len(curpathname)-dir_level)) + '* ['+str(curpathname[-1])+']' + link_prefix + link_path + ')\n'
         logging.info(navigation)
-    # Loop through files and rander to HTML
+    # Loop through files and render to HTML
     for curfile in mdfiles:
         curfilename = os.path.basename(curfile)
         htmlpath = curfile.replace('md','html').replace((file_dir if file_dir is not None else file), out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]
@@ -182,9 +196,12 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
         with open(curfile) as f:
             text  = str(f.read())
             title = re.match(r"^\#\s(.*)", text).group(1)
-            print(title)
+            logging.info(title)
             text  = text.replace("### Project Links", str(navigation))
+            logging.debug(text)
         html = render(text, title=(title if title is not None else curfilename), csspath=csspath, interval=interval)
+        logging.info(htmlpath)
+        logging.debug(html)
         with open(htmlpath, 'w') as f:
             f.write(html)
 
