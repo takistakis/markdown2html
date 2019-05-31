@@ -154,7 +154,7 @@ def run(file=None, file_dir=None, out=None, force=False, preview=False, interval
         sys.exit(1)
 
     # CSS
-    csspath = os.path.expanduser('~/.cache/github-markdown.css')
+    csspath = os.path.expanduser(os.path.join(out,'github-markdown.css'))
     if force or not os.path.isfile(csspath):
         logging.info("Downloading github-markdown.css...")
         download_css(csspath)
