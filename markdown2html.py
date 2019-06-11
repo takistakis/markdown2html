@@ -87,6 +87,21 @@ def download_css(path):
         logging.warning("Unable to download CSS file")
 
 
+def nth_repl_all(s, sub, repl, nth):
+    find = s.find(sub)
+    # loop util we find no match
+    i = 1
+    while find != -1:
+        # if i  is equal to nth we found nth matches so replace
+        if i == nth:
+            s = s[:find]+repl+s[find + len(sub):]
+            i = 0
+        # find + len(sub) + 1 means we start after the last match
+        find = s.find(sub, find + len(sub) + 1)
+        i += 1
+    return s
+
+
 def render(text, title, csspath, interval):
     """Convert a Markdown string to an HTML page.
 
@@ -125,6 +140,8 @@ def render(text, title, csspath, interval):
     refresh = '<meta http-equiv="refresh" content="%s">' % interval
     refresh = refresh if interval is not None else ''
     html = TEMPLATE % (refresh, title, csspath, body)
+    html = html.replace('~~','<del>')
+    nth_repl_all(html, '<del>', '</del>', 2)
     return html
 
 
