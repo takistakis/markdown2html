@@ -147,13 +147,12 @@ def run(mdpath, out=None, force=False, preview=False, interval=None):
 def main():
     """Parse arguments and run."""
     from docopt import docopt
+
     args = docopt(__doc__)
 
     logging.basicConfig(format='%(message)s')
-    if args['--quiet']:
-        logging.root.setLevel(logging.WARNING)
-    else:
-        logging.root.setLevel(logging.INFO)
+    level = logging.WARNING if args['--quiet'] else logging.INFO
+    logging.root.setLevel(level)
 
     run(
         args['<file>'],
