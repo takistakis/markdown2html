@@ -115,8 +115,6 @@ def render(text, title, csspath, interval):
 
     body = markdown.markdown(text, extensions=extensions,
                              extension_configs=configs)
-    # Don't use the line-height style from pygments
-    body = body.replace(' style="line-height: 125%"', '')
     refresh = '<meta http-equiv="refresh" content="%s">' % interval
     refresh = refresh if interval is not None else ''
     html = TEMPLATE % (refresh, title, csspath, body)
