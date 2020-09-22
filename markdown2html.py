@@ -112,6 +112,7 @@ def render(text, title, csspath, interval):
         extensions.append('pymdownx.magiclink')
         extensions.append('pymdownx.tasklist')
         extensions.append('pymdownx.highlight')
+        extensions.append('pymdownx.tilde')
 
     body = markdown.markdown(text, extensions=extensions,
                              extension_configs=configs)

@@ -26,7 +26,7 @@ $ pip install markdown pygments docopt
 ```
 
 Optionally, if [pymdown_extensions] is present, extensions [extra],
-[magiclink], [tasklist] and [highlight] are used.
+[magiclink], [tasklist], [highlight] and [tilde] are used.
 
 ## Usage
 
@@ -56,3 +56,4 @@ Licensed under GPLv3 or later.
 [magiclink]: https://facelessuser.github.io/pymdown-extensions/extensions/magiclink
 [tasklist]: https://facelessuser.github.io/pymdown-extensions/extensions/tasklist
 [highlight]: https://facelessuser.github.io/pymdown-extensions/extensions/highlight/
+[tilde]: https://facelessuser.github.io/pymdown-extensions/extensions/tilde
