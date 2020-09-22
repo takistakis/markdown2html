@@ -92,6 +92,10 @@ def render(text, title, csspath, interval):
 
     configs = {
         'markdown.extensions.codehilite': {
+            'noclasses': True,
+            'pygments_style': 'tango',
+        },
+        'pymdownx.highlight': {
             'guess_lang': False,
             'noclasses': True,
             'pygments_style': 'tango',
@@ -99,7 +103,7 @@ def render(text, title, csspath, interval):
     }
 
     try:
-        import pymdownx
+        import pymdownx  # noqa
     except ImportError:
         logging.info("Module pymdownx not found")
     else:
@@ -107,6 +111,7 @@ def render(text, title, csspath, interval):
         extensions.append('pymdownx.extra')
         extensions.append('pymdownx.magiclink')
         extensions.append('pymdownx.tasklist')
+        extensions.append('pymdownx.highlight')
 
     body = markdown.markdown(text, extensions=extensions,
                              extension_configs=configs)
