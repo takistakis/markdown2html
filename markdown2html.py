@@ -44,22 +44,22 @@ TEMPLATE = """\
 <html>
   <head>
     <meta charset="utf-8">
-    %s
-    <title>%s</title>
-    <link rel="stylesheet" href="%s">
+    {refresh}
+    <title>{title}</title>
+    <link rel="stylesheet" href="{csspath}">
     <style>
-      .markdown-body {
+      .markdown-body {{
         border: 1px solid #ddd;
         border-radius: 3px;
         max-width: 888px;
         margin: 64px auto 51px;
         padding: 45px;
-      }
+      }}
     </style>
   </head>
   <body>
     <article class="markdown-body">
-      %s
+      {body}
     </article>
   </body>
 </html>
@@ -118,8 +118,13 @@ def render(text, title, csspath, interval):
                              extension_configs=configs)
     refresh = '<meta http-equiv="refresh" content="%s">' % interval
     refresh = refresh if interval is not None else ''
-    html = TEMPLATE % (refresh, title, csspath, body)
-    return html
+
+    return TEMPLATE.format(
+        refresh=refresh,
+        title=title,
+        csspath=csspath,
+        body=body,
+    )
 
 
 def run(mdpath, out=None, force=False, preview=False, interval=None):
