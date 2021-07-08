@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-# Copyright 2016 Panagiotis Ktistakis <panktist@gmail.com>
+# Forked from: Panagiotis Ktistakis <panktist@gmail.com>
+# This version maintainer: Thomas Cannon <tcannon.mail@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,23 +17,32 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Usage: markdown2html [options] <file>
+Usage: markdown2html [options]
 
 Convert a GitHub Flavored Markdown file to HTML, using
 markdown, pygments and the latest github-markdown.css from
 https://github.com/sindresorhus/github-markdown-css
 
 Options:
-  -o, --out <file>      Write output to <file>
-  -f, --force           Overwrite existing CSS file
-  -p, --preview         Open generated HTML file in browser
-  -i, --interval <int>  Refresh page every <int> seconds
-  -q, --quiet           Show less information
-  -h, --help            Show this help message and exit
+  --file <file>     Use file <file>
+  --file_dir <path> Use directory instead of file <path>
+  --out <file>      Write output to <file>
+  --force           Overwrite existing CSS file
+  --preview         Open generated HTML file in browser
+  --interval <int>  Refresh page every <int> seconds
+  --nav             Create navigation at beginning of html file
+  --quiet           Show less information
+  --help            Show this help message and exit
 """
 
+#######################
+# Sample Call:
+#     python markdown2html.py --file_dir C:/eSite/eSiteETL --out C:/eSite/eSiteETL/docs/html --nav
+#######################
+
 import logging
-import os.path
+import os
+import re
 import sys
 import urllib.request
 import webbrowser
@@ -77,6 +87,21 @@ def download_css(path):
         logging.warning("Unable to download CSS file")
 
 
+def nth_repl_all(s, sub, repl, nth):
+    find = s.find(sub)
+    # loop util we find no match
+    i = 1
+    while find != -1:
+        # if i  is equal to nth we found nth matches so replace
+        if i == nth:
+            s = s[:find]+repl+s[find + len(sub):]
+            i = 0
+        # find + len(sub) + 1 means we start after the last match
+        find = s.find(sub, find + len(sub) + 1)
+        i += 1
+    return s
+
+
 def render(text, title, csspath, interval):
     """Convert a Markdown string to an HTML page.
 
@@ -119,33 +144,101 @@ def render(text, title, csspath, interval):
     refresh = '<meta http-equiv="refresh" content="%s">' % interval
     refresh = refresh if interval is not None else ''
     html = TEMPLATE % (refresh, title, csspath, body)
+    html = html.replace('~~','<del>')
+    nth_repl_all(html, '<del>', '</del>', 2)
     return html
 
 
-def run(mdpath, out=None, force=False, preview=False, interval=None):
+def run(file=None, file_dir=None, out=None, force=False, preview=False, interval=None, nav=False):
     """Generate an HTML file from a Markdown one."""
-    if not os.path.isfile(mdpath):
-        logging.error("No such file: %s", mdpath)
+    mdfiles = []
+    outfile = []
+    
+    # Find appropriate files
+    if file_dir is not None:
+        if not os.path.exists(file_dir):
+            logging.error("No such top directory: %s", file_dir)
+            sys.exit(1)
+        mdfiles = [os.path.join(root, name)
+            for root, dirs, files in os.walk(file_dir)
+            for name in files
+            if name.endswith((".md"))]
+        outfile=os.path.dirname(file_dir)
+    elif file is not None:
+        if not os.path.isfile(file):
+            logging.error("No such file: %s", file)
+            sys.exit(1)
+        mdfiles = [file]
+        outfile = out
+    else:
+        logging.error("Must choose a file or directory path")
         sys.exit(1)
-    mdfilename = os.path.basename(mdpath)
-    htmlpath = out or '/tmp/%s.html' % os.path.splitext(mdfilename)[0]
-    csspath = os.path.expanduser('~/.cache/github-markdown.css')
 
+    # CSS
+    csspath = os.path.expanduser(os.path.join(out,'github-markdown.css'))
     if force or not os.path.isfile(csspath):
         logging.info("Downloading github-markdown.css...")
         download_css(csspath)
 
-    logging.info("Converting %s to HTML...", mdfilename)
-    with open(mdpath) as f:
-        text = f.read()
-    html = render(text, title=mdfilename, csspath=csspath, interval=interval)
-    with open(htmlpath, 'w') as f:
-        f.write(html)
+    # Navigation
+    navigation = []
+    if nav:
+        logging.info('Buliding navigation...')
+        navigation = '### Project Links\n'
+        for curfile in mdfiles:
+            if os.name == 'nt':
+                logging.debug('OS is Windows - using \\')
+                link_prefix = '(file:\\\\'
+                # curfile = curfile.replace('\\','/')
+                curpathname = os.path.dirname(curfile).split('\\')
+            else:
+                logging.debug('OS is NOT Windows - using /')
+                link_prefix = '(file://'
+                # curfile = curfile.replace('/','\\')
+                curpathname = os.path.dirname(curfile).split('/')
+            
+            logging.debug(curfile)
+            logging.debug(str(curpathname))
+            logging.debug(str(curpathname[-1]))
+            
+            if str(curpathname[-1]) == file_dir:
+                logging.debug('curpathname[-1] == file_dir')
+                curpathname = [os.path.dirname(curfile).split('/')[-1]]
+            
+            curfilename  = os.path.basename(curfile)
+            dir_level    = len(os.path.dirname(file_dir).split('\\')) if file_dir is not None else len(os.path.dirname(file).split('\\'))
+            link_path    = str(curfile.replace('md','html').replace((file_dir if file_dir is not None else file), out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]).replace('\\','/')
+            navigation   += str('    '*(len(curpathname)-dir_level)) + '* ['+str(curpathname[-1])+']' + link_prefix + link_path + ')\n'
+        
+        logging.info(navigation)
+    # Loop through files and render to HTML
+    for curfile in mdfiles:
+        curfilename = os.path.basename(curfile)
+        htmlpath = curfile.replace('md','html').replace((file_dir if file_dir is not None else file), out) or '/tmp/%s.html' % os.path.splitext(curfilename)[0]
+        if not os.path.exists(htmlpath):
+            try:
+                os.makedirs(os.path.dirname(htmlpath))
+            except OSError as exc:
+                logging.error("Error creating file path for %s", htmlpath)
+        logging.info("Converting %s to HTML...", curfilename)
+        title = []
+        with open(curfile) as f:
+            text  = str(f.read())
+            title = re.match(r"^\#\s(.*)", text).group(1)
+            logging.debug(title)
+            text  = text.replace("### Project Links", str(navigation))
+            logging.debug(text)
+        html = render(text, title=(title if title is not None else curfilename), csspath=csspath, interval=interval)
+        logging.debug(htmlpath)
+        logging.debug(html)
+        with open(htmlpath, 'w') as f:
+            f.write(html)
 
-    if preview:
-        browser = webbrowser.get().name
-        logging.info("Opening %s in %s...", htmlpath, browser)
-        webbrowser.open(htmlpath)
+        # Preview
+        if preview:
+            browser = webbrowser.get().name
+            logging.info("Opening %s in %s...", htmlpath, browser)
+            webbrowser.open(htmlpath)
 
 
 def main():
@@ -159,11 +252,13 @@ def main():
     logging.root.setLevel(level)
 
     run(
-        args['<file>'],
+        args['--file'],
+        args['--file_dir'],
         args['--out'],
         args['--force'],
         args['--preview'],
         args['--interval'],
+        args['--nav'],
     )
 
 
