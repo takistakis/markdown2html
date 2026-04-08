@@ -17,12 +17,11 @@ which comes built-in with pygments.
 
 * [markdown]
 * [pygments]
-* [docopt]
 
 Install with:
 
 ```bash
-$ pip install markdown pygments docopt
+$ pip install markdown pygments
 ```
 
 Optionally, if [pymdown_extensions] is present, extensions [extra],
@@ -50,7 +49,6 @@ Licensed under GPLv3 or later.
 [github-markdown.css]: https://github.com/sindresorhus/github-markdown-css
 [markdown]: https://pythonhosted.org/Markdown
 [pygments]: http://pygments.org
-[docopt]: http://docopt.org
 [pymdown_extensions]: https://github.com/facelessuser/pymdown-extensions
 [extra]: https://facelessuser.github.io/pymdown-extensions/extensions/extra
 [magiclink]: https://facelessuser.github.io/pymdown-extensions/extensions/magiclink

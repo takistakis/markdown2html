@@ -10,7 +10,6 @@ authors = [{ name = "Panagiotis Ktistakis", email = "panktist@gmail.com" }]
 license = "GPL-3.0-or-later"
 requires-python = ">=3.10"
 dependencies = [
-    "docopt==0.6.2",
     "Markdown>=3.10.2",
     "Pygments>=2.20.0",
 ]

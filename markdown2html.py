@@ -15,29 +15,66 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""
-Usage: markdown2html [options] <file>
+"""Convert a GitHub Flavored Markdown file to HTML."""
 
-Convert a GitHub Flavored Markdown file to HTML, using
-markdown, pygments and the latest github-markdown.css from
-https://github.com/sindresorhus/github-markdown-css
+from __future__ import annotations
 
-Options:
-  -o, --out <file>      Write output to <file>
-  -f, --force           Overwrite existing CSS file
-  -p, --preview         Open generated HTML file in browser
-  -i, --interval <int>  Refresh page every <int> seconds
-  -q, --quiet           Show less information
-  -h, --help            Show this help message and exit
-"""
-
+import argparse
 import logging
-import os.path
 import sys
+import urllib.error
 import urllib.request
 import webbrowser
+from pathlib import Path
 
 import markdown
+
+try:
+    import pymdownx  # noqa: F401
+
+    _HAS_PYMDOWNX = True
+except ImportError:
+    _HAS_PYMDOWNX = False
+
+CSS_URL = (
+    "https://raw.githubusercontent.com/sindresorhus/"
+    "github-markdown-css/gh-pages/github-markdown.css"
+)
+CSS_CACHE_PATH = Path("~/.cache/github-markdown.css").expanduser()
+REQUEST_TIMEOUT = 10
+
+# Extensions and their configs are fixed at import time based on what's available.
+if _HAS_PYMDOWNX:
+    _EXTENSIONS = [
+        "markdown.extensions.codehilite",
+        "markdown.extensions.sane_lists",
+        "markdown.extensions.tables",
+        "pymdownx.extra",
+        "pymdownx.highlight",
+        "pymdownx.magiclink",
+        "pymdownx.tasklist",
+        "pymdownx.tilde",
+    ]
+    _EXTENSION_CONFIGS: dict = {
+        "pymdownx.highlight": {
+            "guess_lang": False,
+            "noclasses": True,
+            "pygments_style": "tango",
+        },
+    }
+else:
+    _EXTENSIONS = [
+        "markdown.extensions.codehilite",
+        "markdown.extensions.fenced_code",
+        "markdown.extensions.sane_lists",
+        "markdown.extensions.tables",
+    ]
+    _EXTENSION_CONFIGS = {
+        "markdown.extensions.codehilite": {
+            "noclasses": True,
+            "pygments_style": "tango",
+        },
+    }
 
 TEMPLATE = """\
 <!DOCTYPE html>
@@ -66,111 +103,108 @@ TEMPLATE = """\
 """
 
 
-def download_css(path):
-    """Get latest github-markdown.css and store it at `path`."""
-    url = ('https://raw.githubusercontent.com/sindresorhus/'
-           'github-markdown-css/gh-pages/github-markdown.css')
+def download_css(path: Path) -> None:
+    """Get latest github-markdown.css and store it at *path*."""
     try:
-        with urllib.request.urlopen(url) as r, open(path, 'wb') as f:
-            f.write(r.read())
+        with urllib.request.urlopen(CSS_URL, timeout=REQUEST_TIMEOUT) as r:
+            path.write_bytes(r.read())
     except urllib.error.URLError:
         logging.warning("Unable to download CSS file")
 
 
-def render(text, title, csspath, interval):
-    """Convert a Markdown string to an HTML page.
-
-    The following Markdown extensions are used to support most GFM features:
-    codehilite, fenced_code, sane_lists, tables.
-    """
-    extensions = [
-        'markdown.extensions.codehilite',
-        'markdown.extensions.fenced_code',
-        'markdown.extensions.sane_lists',
-        'markdown.extensions.tables',
-    ]
-
-    configs = {
-        'markdown.extensions.codehilite': {
-            'noclasses': True,
-            'pygments_style': 'tango',
-        },
-        'pymdownx.highlight': {
-            'guess_lang': False,
-            'noclasses': True,
-            'pygments_style': 'tango',
-        },
-    }
-
-    try:
-        import pymdownx  # noqa
-    except ImportError:
-        logging.info("Module pymdownx not found")
-    else:
-        extensions.remove('markdown.extensions.fenced_code')
-        extensions.append('pymdownx.extra')
-        extensions.append('pymdownx.magiclink')
-        extensions.append('pymdownx.tasklist')
-        extensions.append('pymdownx.highlight')
-        extensions.append('pymdownx.tilde')
-
-    body = markdown.markdown(text, extensions=extensions,
-                             extension_configs=configs)
-    refresh = '<meta http-equiv="refresh" content="%s">' % interval
-    refresh = refresh if interval is not None else ''
-
-    return TEMPLATE.format(
-        refresh=refresh,
-        title=title,
-        csspath=csspath,
-        body=body,
+def render(text: str, title: str, csspath: Path, interval: int | None) -> str:
+    """Convert a Markdown string to an HTML page."""
+    body = markdown.markdown(
+        text,
+        extensions=_EXTENSIONS,
+        extension_configs=_EXTENSION_CONFIGS,
     )
+    refresh = (
+        f'<meta http-equiv="refresh" content="{interval}">'
+        if interval is not None
+        else ""
+    )
+    return TEMPLATE.format(refresh=refresh, title=title, csspath=csspath, body=body)
 
 
-def run(mdpath, out=None, force=False, preview=False, interval=None):
+def run(
+    mdpath: str,
+    out: str | None = None,
+    force: bool = False,
+    preview: bool = False,
+    interval: int | None = None,
+) -> None:
     """Generate an HTML file from a Markdown one."""
-    if not os.path.isfile(mdpath):
+    src = Path(mdpath)
+    if not src.is_file():
         logging.error("No such file: %s", mdpath)
         sys.exit(1)
-    mdfilename = os.path.basename(mdpath)
-    htmlpath = out or '/tmp/%s.html' % os.path.splitext(mdfilename)[0]
-    csspath = os.path.expanduser('~/.cache/github-markdown.css')
 
-    if force or not os.path.isfile(csspath):
+    htmlpath = Path(out) if out else Path(f"/tmp/{src.stem}.html")
+
+    if force or not CSS_CACHE_PATH.is_file():
         logging.info("Downloading github-markdown.css...")
-        download_css(csspath)
+        download_css(CSS_CACHE_PATH)
 
-    logging.info("Converting %s to HTML...", mdfilename)
-    with open(mdpath) as f:
-        text = f.read()
-    html = render(text, title=mdfilename, csspath=csspath, interval=interval)
-    with open(htmlpath, 'w') as f:
-        f.write(html)
+    logging.info("Converting %s to HTML...", src.name)
+    html = render(
+        src.read_text(),
+        title=src.name,
+        csspath=CSS_CACHE_PATH,
+        interval=interval,
+    )
+    htmlpath.write_text(html)
 
     if preview:
-        browser = webbrowser.get().name
-        logging.info("Opening %s in %s...", htmlpath, browser)
-        webbrowser.open(htmlpath)
+        logging.info("Opening %s in browser...", htmlpath)
+        webbrowser.open(str(htmlpath))
 
 
-def main():
+def main() -> None:
     """Parse arguments and run."""
-    from docopt import docopt
+    parser = argparse.ArgumentParser(
+        description=(
+            "Convert a GitHub Flavored Markdown file to HTML, using markdown, "
+            "pygments and the latest github-markdown.css from "
+            "https://github.com/sindresorhus/github-markdown-css"
+        ),
+    )
+    parser.add_argument("file", metavar="<file>", help="Markdown file to convert")
+    parser.add_argument("-o", "--out", metavar="<file>", help="Write output to <file>")
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Overwrite existing CSS file",
+    )
+    parser.add_argument(
+        "-p",
+        "--preview",
+        action="store_true",
+        help="Open generated HTML file in browser",
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        metavar="<int>",
+        type=int,
+        help="Refresh page every <int> seconds",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="Show less information",
+    )
+    args = parser.parse_args()
 
-    args = docopt(__doc__)
-
-    logging.basicConfig(format='%(message)s')
-    level = logging.WARNING if args['--quiet'] else logging.INFO
-    logging.root.setLevel(level)
-
-    run(
-        args['<file>'],
-        args['--out'],
-        args['--force'],
-        args['--preview'],
-        args['--interval'],
+    logging.basicConfig(
+        format="%(message)s",
+        level=logging.WARNING if args.quiet else logging.INFO,
     )
 
+    run(args.file, args.out, args.force, args.preview, args.interval)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
