@@ -59,7 +59,7 @@ if _HAS_PYMDOWNX:
         "pymdownx.highlight": {
             "guess_lang": False,
             "noclasses": True,
-            "pygments_style": "tango",
+            "pygments_style": "github-dark",
         },
     }
 else:
@@ -72,7 +72,7 @@ else:
     _EXTENSION_CONFIGS = {
         "markdown.extensions.codehilite": {
             "noclasses": True,
-            "pygments_style": "tango",
+            "pygments_style": "github-dark",
         },
     }
 
@@ -81,16 +81,71 @@ TEMPLATE = """\
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     {refresh}
     <title>{title}</title>
     <link rel="stylesheet" href="{csspath}">
     <style>
+      /* Always render like GitHub's dark theme, regardless of OS preference.
+         github-markdown.css only applies its dark variables inside a
+         "prefers-color-scheme: dark" media query, so redefine them here,
+         unconditionally, to force dark mode even on light-preference OSes.
+         Defined on :root (rather than .markdown-body) so body, which is an
+         ancestor of .markdown-body, can use them too.
+         Only the variables actually consumed by rules that apply to markdown
+         output are listed; the --color-prettylights-syntax-* variables are
+         omitted because those only back GitHub's own .pl-* highlighting
+         classes, which Pygments (rendered here with inline styles) never
+         produces. */
+      :root {{
+        color-scheme: dark;
+        --fgColor-default: #f0f6fc;
+        --fgColor-muted: #9198a1;
+        --fgColor-accent: #4493f8;
+        --fgColor-attention: #d29922;
+        --fgColor-danger: #f85149;
+        --fgColor-done: #ab7df8;
+        --fgColor-success: #3fb950;
+        --bgColor-default: #0d1117;
+        --bgColor-muted: #151b23;
+        --bgColor-attention-muted: #bb800926;
+        --bgColor-neutral-muted: #656c7633;
+        --borderColor-default: #3d444d;
+        --borderColor-muted: #3d444db3;
+        --borderColor-neutral-muted: var(--borderColor-muted);
+        --borderColor-accent-emphasis: #1f6feb;
+        --borderColor-attention-emphasis: #9e6a03;
+        --borderColor-danger-emphasis: #da3633;
+        --borderColor-done-emphasis: #8957e5;
+        --borderColor-success-emphasis: #238636;
+        --focus-outlineColor: var(--borderColor-accent-emphasis);
+      }}
+      html {{
+        background-color: var(--bgColor-default);
+      }}
+      body {{
+        background-color: var(--bgColor-default);
+        color-scheme: dark;
+        margin: 0;
+        min-height: 100vh;
+        padding: 32px 16px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+          Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      }}
       .markdown-body {{
-        border: 1px solid #ddd;
-        border-radius: 3px;
+        background-color: var(--bgColor-default);
+        border: 1px solid var(--borderColor-default);
+        border-radius: 6px;
+        box-sizing: border-box;
         max-width: 888px;
-        margin: 64px auto 51px;
-        padding: 45px;
+        margin: 0 auto;
+        padding: 40px;
+      }}
+      /* Pygments sets background on div.highlight via inline style; the pre
+         inside already gets background + border-radius from github-markdown.css,
+         so the outer div would show a square-cornered halo. Strip it. */
+      .markdown-body div.highlight {{
+        background: transparent !important;
       }}
     </style>
   </head>
